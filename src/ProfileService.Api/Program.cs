@@ -35,25 +35,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("CanAccessProfiles", policy =>
-    {
-        policy.RequireRole("Student", "Instructor", "Admin");
-    })
-    .AddPolicy("CanDeleteProfiles", policy =>
-    {
-        policy.RequireRole("Admin");
-    });
+builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
 
 app.UseCors("Frontend");
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApiEndpoints();
-}
+app.MapOpenApiEndpoints();
 
 app.MapProfileEndpoints();
 
