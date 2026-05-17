@@ -25,7 +25,6 @@ public static class ProfileMapper
         return new UpdateProfileInput 
         (
            request.UserId,
-           request.Email,
            request.FirstName,
            request.LastName,
            request.PhoneNumber,

@@ -38,6 +38,17 @@ public sealed class ProfileManager(IIdentityServiceProfileClient identityProfile
         return MapProfileResult(result);
     }
 
+    public async Task<Result> DeleteProfileAsync(DeleteProfileInput input, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(input.UserId))
+            return Result.Failure(ErrorTypes.BadRequest, "User ID cannot be null or empty");
+
+        Result result = await identityProfileClient.DeleteProfileAsync(input.UserId, ct);
+
+        return result;
+    }
+         
+
 
     private static ProfileOutput ToOutput(ProfileReply profile)
     {
@@ -66,5 +77,4 @@ public sealed class ProfileManager(IIdentityServiceProfileClient identityProfile
 
         return Result<ProfileOutput>.Success(output);
     }
-
 }

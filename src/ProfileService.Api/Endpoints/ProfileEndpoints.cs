@@ -34,6 +34,13 @@ public static class ProfileEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status400BadRequest);
 
+        group.MapDelete("/delete", DeleteProfileEndpoint)
+            .WithName("DeleteProfile")
+            .WithSummary("Delete profile")
+            .WithDescription("Deletes a profile. Access is restricted to administrators.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
     }
 
@@ -63,6 +70,17 @@ public static class ProfileEndpoints
         UpdateProfileResponse response = ProfileMapper.MapToUpdateProfileResponse(result.Value!);
 
         return Results.Ok(response);
+    }
+
+    public static async Task<IResult> DeleteProfileEndpoint(string userId, IProfileService profileManager, CancellationToken ct = default)
+    {
+        DeleteProfileInput input = new(userId);
+
+        Result result = await profileManager.DeleteProfileAsync(input, ct);
+
+        return result.IsSuccess 
+            ? Results.NoContent() 
+            : ResultMapper.MapToHttpFailResult(result);
     }
 }
 

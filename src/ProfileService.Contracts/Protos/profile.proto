@@ -11,6 +11,7 @@
 
       rpc UpdateProfile (UpdateProfileRequest) returns (ProfileReply);
 
+      rpc DeleteProfile (DeleteProfileRequest) returns (DeleteProfileReply);
     }
 
     // genererar GetProfileRequest.cs bakom kulissen
@@ -36,4 +37,12 @@
       string phone_number = 4;
       string description = 5;
       string image_url = 6;
+    }
+
+    message DeleteProfileRequest {
+      string user_id = 1;
+    }
+
+    message DeleteProfileReply {
+      bool success = 1;
     }

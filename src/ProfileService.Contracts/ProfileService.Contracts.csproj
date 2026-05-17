@@ -19,8 +19,4 @@
   <ItemGroup>
     <Protobuf Include="Protos\profile.proto" GrpcServices="Client" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Shared\Mappers\" />
-  </ItemGroup>
 </Project>

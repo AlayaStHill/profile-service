@@ -27,4 +27,27 @@ public static class RpcExceptionMapper
                 $"gRPC status: {ex.StatusCode}. Details: {ex.Status.Detail}")
         };
     }
+
+    public static Result MapRpcException(RpcException ex)
+    {
+        return ex.StatusCode switch
+        {
+            StatusCode.NotFound => Result.Failure(
+                ErrorTypes.NotFound,
+                ex.Status.Detail),
+
+            StatusCode.InvalidArgument => Result.Failure(
+                ErrorTypes.BadRequest,
+                ex.Status.Detail),
+
+            StatusCode.PermissionDenied => Result.Failure(
+                ErrorTypes.Forbidden,
+                ex.Status.Detail),
+
+            _ => Result.Failure(
+                ErrorTypes.ExternalServiceError,
+                "Failed to retrieve profile from IdentityService.",
+                $"gRPC status: {ex.StatusCode}. Details: {ex.Status.Detail}")
+        };
+    }
 }

@@ -26,7 +26,7 @@ public sealed class IdentityServiceProfileClient(ProfileGrpcService.ProfileGrpcS
 
             return Result<ProfileReply>.Success(response);
         }
-        catch (RpcException ex)
+        catch (RpcException ex) // I gRPC är det normala sättet att signalera fel att servern kastar eller returnerar ett gRPC-fel, och klienten får det som en RpcException
         {
             return RpcExceptionMapper.MapRpcException<ProfileReply>(ex);
         }
@@ -58,7 +58,34 @@ public sealed class IdentityServiceProfileClient(ProfileGrpcService.ProfileGrpcS
         }
     }
 
+    public async Task<Result> DeleteProfileAsync(string userId, CancellationToken ct)
+    {
+        try
+        {
+            DeleteProfileRequest request = new DeleteProfileRequest
+            {
+                UserId = userId
+            };
 
+            Metadata metadata = CreateAuthorizationMetadata();
+
+            DeleteProfileReply response = await client.DeleteProfileAsync(request, headers: metadata, cancellationToken: ct);
+
+            // anropet lyckas men success = false. Extra koll behövs därför
+            if (!response.Success)
+                return Result.Failure(ErrorTypes.InternalServerError, "Profile could not be deleted.");
+
+            return Result.Success();
+        }
+        catch (RpcException ex)
+        {
+            return RpcExceptionMapper.MapRpcException(ex);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(ErrorTypes.InternalServerError, "Unexpected error while deleting profile:", ex.Message);
+        }
+    }
 
     private Metadata CreateAuthorizationMetadata()
     {
