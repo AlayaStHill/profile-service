@@ -1,7 +1,104 @@
-﻿using ProfileService.Application.Profiles.Interfaces;
+using Grpc.Core;
+using Microsoft.AspNetCore.Http;
+using ProfileService.Application.Profiles.Inputs;
+using ProfileService.Application.Profiles.Interfaces;
+using ProfileService.Contracts.Protos;
+using ProfileService.Contracts.Shared.Results;
+using ProfileService.Infrastructure.Grpc.Mappers;
 
 namespace ProfileService.Infrastructure.Grpc.Clients;
 
-public sealed class IdentityServiceProfileClient : IIdentityServiceProfileClient
+public sealed class IdentityServiceProfileClient(ProfileGrpcService.ProfileGrpcServiceClient client, IHttpContextAccessor httpContextAccessor) : IIdentityServiceProfileClient
 {
+    public async Task<Result<ProfileReply>> GetProfileAsync(string userId, CancellationToken ct = default)
+    {
+        try
+        {
+            GetProfileRequest request = new GetProfileRequest
+            {
+                UserId = userId
+            };
+
+            Metadata metadata = CreateAuthorizationMetadata();
+
+            // Code generator genererar två klientmetoder för samma RPC både en synkron och en asynkron metod. Här anropas den asynkrona versionen.
+            ProfileReply response = await client.GetProfileAsync(request, headers: metadata, cancellationToken:ct);
+
+            return Result<ProfileReply>.Success(response);
+        }
+        catch (RpcException ex) // I gRPC är det normala sättet att signalera fel att servern kastar eller returnerar ett gRPC-fel, och klienten får det som en RpcException
+        {
+            return RpcExceptionMapper.MapRpcException<ProfileReply>(ex);
+        }
+        catch (Exception ex)
+        {
+            return Result<ProfileReply>.Failure(ErrorTypes.InternalServerError, "Unexpected error while retrieving profile:", ex.Message);
+        }
+    }
+
+    public async Task<Result<ProfileReply>> UpdateProfileAsync(UpdateProfileInput input, CancellationToken ct)
+    {
+        try
+        {
+            UpdateProfileRequest request = ProfileMapper.MapToProfileUpdateRequest(input);
+
+            Metadata metadata = CreateAuthorizationMetadata();
+
+            ProfileReply response = await client.UpdateProfileAsync(request, headers: metadata, cancellationToken: ct);
+
+            return Result<ProfileReply>.Success(response);
+        }
+        catch (RpcException ex)
+        {
+            return RpcExceptionMapper.MapRpcException<ProfileReply>(ex);
+        }
+        catch (Exception ex)
+        {
+            return Result<ProfileReply>.Failure(ErrorTypes.InternalServerError, "Unexpected error while updating profile:", ex.Message);
+        }
+    }
+
+    public async Task<Result> DeleteProfileAsync(string userId, CancellationToken ct)
+    {
+        try
+        {
+            DeleteProfileRequest request = new DeleteProfileRequest
+            {
+                UserId = userId
+            };
+
+            Metadata metadata = CreateAuthorizationMetadata();
+
+            DeleteProfileReply response = await client.DeleteProfileAsync(request, headers: metadata, cancellationToken: ct);
+
+            // anropet lyckas men success = false. Extra koll behövs därför
+            if (!response.Success)
+                return Result.Failure(ErrorTypes.InternalServerError, "Profile could not be deleted.");
+
+            return Result.Success();
+        }
+        catch (RpcException ex)
+        {
+            return RpcExceptionMapper.MapRpcException(ex);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(ErrorTypes.InternalServerError, "Unexpected error while deleting profile:", ex.Message);
+        }
+    }
+
+    private Metadata CreateAuthorizationMetadata()
+    {
+        Metadata metadata = new();
+
+        // hämtar den inkommande bearer-token från frontend-requesten till 
+        string? authHeader = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(authHeader))
+            metadata.Add("Authorization", authHeader);
+
+        return metadata;
+    }
+
 }
+

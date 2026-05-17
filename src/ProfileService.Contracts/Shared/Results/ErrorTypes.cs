@@ -1,11 +1,13 @@
-﻿namespace ProfileService.Application.Shared.Results;
+﻿namespace ProfileService.Contracts.Shared.Results;
 
 public enum ErrorTypes
 {
     BadRequest,
     NotFound,
     Conflict,
-    Unexpected,
+    Unauthorized,
+    Forbidden,
+    Timeout,
     ExternalServiceError,
     InternalServerError
 }

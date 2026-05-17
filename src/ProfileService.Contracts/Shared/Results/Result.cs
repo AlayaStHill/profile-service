@@ -1,4 +1,6 @@
-﻿namespace ProfileService.Application.Shared.Results;
+﻿using Google.Protobuf.WellKnownTypes;
+
+namespace ProfileService.Contracts.Shared.Results;
 
 public sealed record Result
 {
@@ -8,6 +10,12 @@ public sealed record Result
 
     private Result(bool isSuccess, ResultError? error = null)
     {
+        if (isSuccess && error is not null)
+            throw new ArgumentException("Successful result cannot contain an error.", nameof(error));
+
+        if (!isSuccess && error is null)
+            throw new ArgumentNullException(nameof(error), "Failed result must contain an error.");
+
         IsSuccess = isSuccess;
         Error = error;
     }
@@ -30,6 +38,12 @@ public sealed record Result<T>
 
     private Result(bool isSuccess, ResultError? error = null, T? value = default) 
     {
+        if (isSuccess && value is null)
+            throw new ArgumentNullException(nameof(value), "Successful result must contain a value.");
+
+        if (!isSuccess && error is null)
+            throw new ArgumentNullException(nameof(error), "Failed result must contain an error.");
+
         IsSuccess = isSuccess;
         Error = error; 
         Value = value;

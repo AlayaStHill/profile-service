@@ -1,26 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProfileService.Application.Shared.Results;
+using ProfileService.Contracts.Shared.Results;
 
 namespace ProfileService.Api.Shared.Mappers;
 
 public static class ResultMapper
 {
-    // ta ett Result och gör om det till ett http-svar
-    public static IActionResult MapToActionResult(Result result)
+    public static IResult MapToHttpFailResult(Result result)
         => MapError(result.Error!);
 
-    public static IActionResult MapToActionResult<T>(Result<T> result)
+    public static IResult MapToHttpFailResult<T>(Result<T> result)
         => MapError(result.Error!);
 
-    public static IActionResult MapError(ResultError error)
+    public static IResult MapError(ResultError error)
     {
         return error.Type switch
         {
-            ErrorTypes.NotFound => new NotFoundObjectResult(error.Message),
-            ErrorTypes.BadRequest => new BadRequestObjectResult(error.Message),
-            ErrorTypes.Conflict => new ConflictObjectResult(error.Message),
-            ErrorTypes.ExternalServiceError => new ObjectResult(error.Message) { StatusCode = 502 },
-            _ => new ObjectResult(error.Message) { StatusCode = 500 }
+            ErrorTypes.NotFound => Results.NotFound(error.Message),
+            ErrorTypes.BadRequest => Results.BadRequest(error.Message),
+            ErrorTypes.Conflict => Results.Conflict(error.Message),
+            ErrorTypes.ExternalServiceError => Results.Problem(detail: error.Message, statusCode: StatusCodes.Status502BadGateway),
+            ErrorTypes.Forbidden => Results.Problem(detail: error.Message, statusCode: StatusCodes.Status403Forbidden),
+            _ => Results.Problem(detail: error.Message, statusCode: StatusCodes.Status500InternalServerError)
         };
     }
 
