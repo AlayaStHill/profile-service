@@ -7,4 +7,5 @@ namespace ProfileService.Application.Profiles.Interfaces;
 public interface IProfileService
 {
     Task<Result<ProfileOutput>> GetProfileAsync(GetProfileInput input, CancellationToken ct);
+    Task<Result<ProfileOutput>> UpdateProfileAsync(UpdateProfileInput input, CancellationToken ct);
 }

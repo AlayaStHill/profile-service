@@ -19,20 +19,27 @@ public sealed class ProfileManager(IIdentityServiceProfileClient identityProfile
 
         Result<ProfileReply> result = await identityProfileClient.GetProfileAsync(input.UserId, ct);
 
-        if (result.IsFailure)
-        {
-            ResultError error = result.Error!;
-            return Result<ProfileOutput>.Failure(error.Type, error.Message, error.Details);
-        }
-
-        ProfileReply profile = result.Value!;
-        ProfileOutput output = ToOutput(profile); 
-
-
-        return Result<ProfileOutput>.Success(output);
+        return MapProfileResult(result);
     }
 
-    public ProfileOutput ToOutput(ProfileReply profile)
+    public async Task<Result<ProfileOutput>> UpdateProfileAsync(UpdateProfileInput input, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(input.UserId))
+            return Result<ProfileOutput>.Failure(ErrorTypes.BadRequest, "User ID cannot be null or empty");
+
+        if (string.IsNullOrWhiteSpace(input.FirstName))
+            return Result<ProfileOutput>.Failure(ErrorTypes.BadRequest, "First name cannot be null or empty");
+
+        if (string.IsNullOrWhiteSpace(input.LastName))
+            return Result<ProfileOutput>.Failure(ErrorTypes.BadRequest, "Last name cannot be null or empty");
+
+        Result<ProfileReply> result = await identityProfileClient.UpdateProfileAsync(input, ct);
+
+        return MapProfileResult(result);
+    }
+
+
+    private static ProfileOutput ToOutput(ProfileReply profile)
     {
         return new ProfileOutput
         (
@@ -45,5 +52,19 @@ public sealed class ProfileManager(IIdentityServiceProfileClient identityProfile
             profile.ImageUrl
         );
     }
+
+    private static Result<ProfileOutput> MapProfileResult(Result<ProfileReply> result)
+    {
+        if (result.IsFailure)
+        {
+            ResultError error = result.Error!;
+            return Result<ProfileOutput>.Failure(error.Type, error.Message, error.Details);
+        }
+
+        ProfileReply profile = result.Value!;
+        ProfileOutput output = ToOutput(profile);
+
+        return Result<ProfileOutput>.Success(output);
+    }
+
 }
-// Update ansvarar för full uppdatering, skicka med alla värden så att de inte överskrivs i identityservice

@@ -26,6 +26,14 @@ public static class ProfileEndpoints
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapPut("/update", UpdateProfileEndpoint)
+            .WithName("UpdateProfile")
+            .WithSummary("Update profile")
+            .WithDescription("Updates profile information for authorized users. Access depends on assigned roles and whether the requested user matches the authenticated user.")
+            .Produces<UpdateProfileResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status400BadRequest);
+
 
     }
 
@@ -38,7 +46,21 @@ public static class ProfileEndpoints
         if (result.IsFailure)
             return ResultMapper.MapToHttpFailResult(result);
 
-        GetProfileResponse response = ResponseMapper.MapToGetProfileResponse(result.Value!);
+        GetProfileResponse response = ProfileMapper.MapToGetProfileResponse(result.Value!);
+
+        return Results.Ok(response);
+    }
+
+    public static async Task<IResult> UpdateProfileEndpoint(UpdateProfileRequest request, IProfileService profileManager, CancellationToken ct = default)
+    {
+        UpdateProfileInput input = ProfileMapper.MapToUpdateProfileInput(request);
+
+        Result<ProfileOutput> result = await profileManager.UpdateProfileAsync(input, ct);
+
+        if (result.IsFailure)
+            return ResultMapper.MapToHttpFailResult(result);
+
+        UpdateProfileResponse response = ProfileMapper.MapToUpdateProfileResponse(result.Value!);
 
         return Results.Ok(response);
     }

@@ -1,13 +1,19 @@
+    // syntax-regler, default-värden etc.
     syntax = "proto3";
 
+    // avgör vilket namespace genererade c#-filer får.
     option csharp_namespace = "ProfileService.Contracts.Protos";
 
     package profile;
 
     service ProfileGrpcService {
       rpc GetProfile (GetProfileRequest) returns (ProfileReply);
+
+      rpc UpdateProfile (UpdateProfileRequest) returns (ProfileReply);
+
     }
 
+    // genererar GetProfileRequest.cs bakom kulissen
     message GetProfileRequest {
       string user_id = 1;
     }
@@ -20,4 +26,14 @@
       string phone_number = 5;
       string description = 6;
       string image_url = 7;
+    }
+
+    
+    message UpdateProfileRequest {
+      string user_id = 1;
+      string first_name = 2;
+      string last_name = 3;
+      string phone_number = 4;
+      string description = 5;
+      string image_url = 6;
     }

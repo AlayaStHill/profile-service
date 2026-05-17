@@ -19,6 +19,7 @@ public static class ResultMapper
             ErrorTypes.BadRequest => Results.BadRequest(error.Message),
             ErrorTypes.Conflict => Results.Conflict(error.Message),
             ErrorTypes.ExternalServiceError => Results.Problem(detail: error.Message, statusCode: StatusCodes.Status502BadGateway),
+            ErrorTypes.Forbidden => Results.Problem(detail: error.Message, statusCode: StatusCodes.Status403Forbidden),
             _ => Results.Problem(detail: error.Message, statusCode: StatusCodes.Status500InternalServerError)
         };
     }

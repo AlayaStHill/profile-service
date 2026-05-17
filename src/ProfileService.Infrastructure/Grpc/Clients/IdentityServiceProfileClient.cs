@@ -1,5 +1,6 @@
 using Grpc.Core;
 using Microsoft.AspNetCore.Http;
+using ProfileService.Application.Profiles.Inputs;
 using ProfileService.Application.Profiles.Interfaces;
 using ProfileService.Contracts.Protos;
 using ProfileService.Contracts.Shared.Results;
@@ -18,13 +19,7 @@ public sealed class IdentityServiceProfileClient(ProfileGrpcService.ProfileGrpcS
                 UserId = userId
             };
 
-            Metadata metadata = new();
-            // hämtar den inkommande bearer-token från frontend-requesten till 
-            string? authHeader = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
-
-            if (!string.IsNullOrWhiteSpace(authHeader))
-                metadata.Add("Authorization", authHeader);
-
+            Metadata metadata = CreateAuthorizationMetadata();
 
             // Code generator genererar två klientmetoder för samma RPC både en synkron och en asynkron metod. Här anropas den asynkrona versionen.
             ProfileReply response = await client.GetProfileAsync(request, headers: metadata, cancellationToken:ct);
@@ -41,9 +36,42 @@ public sealed class IdentityServiceProfileClient(ProfileGrpcService.ProfileGrpcS
         }
     }
 
+    public async Task<Result<ProfileReply>> UpdateProfileAsync(UpdateProfileInput input, CancellationToken ct)
+    {
+        try
+        {
+            UpdateProfileRequest request = ProfileMapper.MapToProfileUpdateRequest(input);
+
+            Metadata metadata = CreateAuthorizationMetadata();
+
+            ProfileReply response = await client.UpdateProfileAsync(request, headers: metadata, cancellationToken: ct);
+
+            return Result<ProfileReply>.Success(response);
+        }
+        catch (RpcException ex)
+        {
+            return RpcExceptionMapper.MapRpcException<ProfileReply>(ex);
+        }
+        catch (Exception ex)
+        {
+            return Result<ProfileReply>.Failure(ErrorTypes.InternalServerError, "Unexpected error while updating profile:", ex.Message);
+        }
+    }
 
 
 
+    private Metadata CreateAuthorizationMetadata()
+    {
+        Metadata metadata = new();
+
+        // hämtar den inkommande bearer-token från frontend-requesten till 
+        string? authHeader = httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(authHeader))
+            metadata.Add("Authorization", authHeader);
+
+        return metadata;
+    }
 
 }
 
