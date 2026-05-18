@@ -44,7 +44,7 @@ public static class ProfileEndpoints
 
     }
 
-    public static async Task<IResult> GetProfileEndpoint(GetProfileRequest request, IProfileService profileManager, CancellationToken ct = default)
+    public static async Task<IResult> GetProfileEndpoint([AsParameters] GetProfileRequest request, IProfileService profileManager, CancellationToken ct = default)
     {
         GetProfileInput input = new(request.UserId);
 
