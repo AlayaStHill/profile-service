@@ -16,19 +16,28 @@ builder.Services.AddCorsConfiguration();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
+string issuer = builder.Configuration["JwtSettings:Issuer"]
+    ?? throw new InvalidOperationException("JwtSettings:Issuer is missing.");
+
+string audience = builder.Configuration["JwtSettings:Audience"]
+    ?? throw new InvalidOperationException("JwtSettings:Audience is missing.");
+
+string signinKey = builder.Configuration["JwtSettings:SigninKey"]
+    ?? throw new InvalidOperationException("JwtSettings:SigninKey is missing.");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options => {
         // regler för vad en giltig token är.
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidIssuer = issuer,
 
             ValidateAudience = true,
-            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            ValidAudience = audience,
 
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SigningKey"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signinKey)),
 
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
