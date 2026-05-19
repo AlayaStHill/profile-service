@@ -2,4 +2,7 @@
 
 internal class IdentityGrpcOptions
 {
+    public const string SectionName = "GrpcSettings";
+
+    public string IdentityServiceUrl { get; set; } = null!;
 }
