@@ -37,7 +37,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = audience,
 
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(signinKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Convert.FromBase64String(signinKey)),
 
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
