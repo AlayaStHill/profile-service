@@ -51,14 +51,15 @@ var app = builder.Build();
 
 app.UseCors("Frontend");
 
-app.MapOpenApiEndpoints();
-
-app.MapProfileEndpoints();
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapOpenApiEndpoints();
+
+app.MapProfileEndpoints();
 
 app.Run();
 
